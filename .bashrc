@@ -26,6 +26,7 @@ function set_color_prompt {
     RAND_BASE64='\033[37m`openssl rand -base64 3`\033[0m'
     RAND_HEX='\033[37m`openssl rand -hex 3`\033[0m'
     SSH='\033[37m`ssh-add -l | cut -c 1-5,13-18,56-`\033[0m'
+    #GITHASH / git commit hash, maybe extend USERHOSTBRANCH, follow on GITBRANCH above
     USERHOSTBRANCH='\033[1;34m`whoami`\033[0m \033[1;35m$(GITBRANCH)\033[0m'
     if [  ${RC} -eq 0 ]
     then
@@ -38,7 +39,7 @@ function set_color_prompt {
     LINE0=$USERHOSTBRANCH'\n'
     LINE1=$SSH'\n'
     LINE2=$PWDRC'\n'
-    PS1=$LINE_A$LINE0$LINE1$LINE2 
+    PS1=$LINE0$LINE_A$LINE1$LINE2 
 }
 export PROMPT_COMMAND=set_color_prompt
 
