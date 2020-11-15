@@ -5,4 +5,4 @@
 	lol = log --graph --decorate --oneline --color --reflog
 [core]
 	excludefile = /root/.gitignore
-	editor = vim
+	editor = nvim
