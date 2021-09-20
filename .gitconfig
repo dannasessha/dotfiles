@@ -1,8 +1,17 @@
 [user]
 	email = sessha@zingolabs.com
 	name = dannasessha
+	signingkey = BBEAA84221CF0FE7
 [alias]
 	lol = log --graph --decorate --oneline --color --reflog
 [core]
 	excludefile = /root/.gitignore
 	editor = nvim
+[gpg]
+	program = /usr/bin/gpg
+[commit]
+	gpgsign = false
+[init]
+	defaultBranch = main
+[merge]
+  conflictstyle = diff3
