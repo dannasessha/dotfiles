@@ -1,53 +1,7 @@
 --load plugins first
 require('plugins')
 
--- lua lsp hackery
-require'lspconfig'.sumneko_lua.setup{}
-
-local system_name = "Linux"
-
--- set the path to the sumneko installation; if you previously installed via the now deprecated :LspInstall, use
---local sumneko_root_path = vim.fn.stdpath('cache')..'/lspconfig/sumneko_lua/lua-language-server'
-local sumneko_root_path = '/home/ha/code/lua-language-server'
---..'/lspconfig/sumneko_lua/lua-language-server'
---local sumneko_binary = sumneko_root_path.."/bin/"..system_name.."/lua-language-server"
-local sumneko_binary = sumneko_root_path.."/bin/"..system_name.."/lua-language-server"
-
-local runtime_path = vim.split(package.path, ';')
-table.insert(runtime_path, "lua/?.lua")
-table.insert(runtime_path, "lua/?/init.lua")
-
-require'lspconfig'.sumneko_lua.setup {
-  cmd = {sumneko_binary, "-E", sumneko_root_path .. "/main.lua"};
-  settings = {
-    Lua = {
-      runtime = {
-        -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-        version = 'LuaJIT',
-        -- Setup your lua path
-        path = runtime_path,
-      },
-      diagnostics = {
-        -- Get the language server to recognize the `vim` global
-        globals = {'vim'},
-      },
-      workspace = {
-        -- Make the server aware of Neovim runtime files
-        library = vim.api.nvim_get_runtime_file("", true),
-      },
-      -- Do not send telemetry data containing a randomized but unique identifier
-      telemetry = {
-        enable = false,
-      },
-      -- added next 3 lines, working?
-      hint = {
-        enable = true
-      },
-    },
-  },
-}
-
---LSP keybindings
+-----------------------------setup LSP keybindings
 local nvim_lsp = require('lspconfig')
 --function printlsp()
 --  print(nvim_lsp)
@@ -86,10 +40,12 @@ local on_attach = function(client, bufnr)
 
 end
 
+--revisit loop when wishing to introduce more
+--complexity and elegance
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
-
-local servers = { 'sumneko_lua' }
+--[[
+local servers = { 'sumneko_lua', 'ccls' }
 for _, lsp in ipairs(servers) do
   nvim_lsp[lsp].setup {
     cmd = {sumneko_binary, "-E", sumneko_root_path .. "/main.lua"};
@@ -99,8 +55,116 @@ for _, lsp in ipairs(servers) do
     }
   }
  end
+ ]]--
 
+--------------------- lua lsp hackery { sumneko_lua }
+
+local system_name = "Linux"
+
+-- set the path to the sumneko installation; if you previously installed via the now deprecated :LspInstall, use
+local sumneko_root_path = '/home/ha/code/lua-language-server'
+local sumneko_binary = sumneko_root_path.."/bin/"..system_name.."/lua-language-server"
+
+local runtime_path = vim.split(package.path, ';')
+table.insert(runtime_path, "lua/?.lua")
+table.insert(runtime_path, "lua/?/init.lua")
+
+require'lspconfig'.sumneko_lua.setup {
+  cmd = {sumneko_binary, "-E", sumneko_root_path .. "/main.lua"};
+  settings = {
+    Lua = {
+      runtime = {
+        -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+        version = 'LuaJIT',
+        -- Setup your lua path
+        path = runtime_path,
+      },
+      diagnostics = {
+        -- Get the language server to recognize the `vim` global
+        globals = {'vim'},
+      },
+      workspace = {
+        -- Make the server aware of Neovim runtime files
+        library = vim.api.nvim_get_runtime_file("", true),
+      },
+      -- Do not send telemetry data containing a randomized but unique identifier
+      telemetry = {
+        enable = false,
+      },
+      -- added next 3 lines, working?
+      hint = {
+        enable = true
+      },
+    },
+  },
+    on_attach = on_attach,
+    flags = {
+      debounce_text_changes = 150,
+    }
+}
+
+-------------------------- C++ lsp hackery { ccls }
+local configs = require 'lspconfig/configs'
+local util = require 'lspconfig/util'
+
+configs.ccls = {
+  default_config = {
+    cmd = { 'ccls' },
+    -- add h?
+    filetypes = { 'c', 'cpp', 'objc', 'objcpp' },
+    root_dir = function(fname)
+      return util.root_pattern('compile_commands.json', '.ccls', 'compile_flags.txt', '.git')(fname)
+        or util.path.dirname(fname)
+    end,
+    on_attach = on_attach,
+    flags = {
+      debounce_text_changes = 150,
+    }
+  },
+  docs = {
+    description = [[
+https://github.com/MaskRay/ccls/wiki
+ccls relies on a [JSON compilation database](https://clang.llvm.org/docs/JSONCompilationDatabase.html) specified
+as compile_commands.json or, for simpler projects, a compile_flags.txt.
+For details on how to automatically generate one using CMake look [here](https://cmake.org/cmake/help/latest/variable/CMAKE_EXPORT_COMPILE_COMMANDS.html).
+Customization options are passed to ccls at initialization time via init_options, a list of available options can be found [here](https://github.com/MaskRay/ccls/wiki/Customization#initialization-options). For example:
+```lua
+local lspconfig = require'lspconfig'
+lspconfig.ccls.setup {
+  init_options = {
+    compilationDatabaseDirectory = "build";
+    index = {
+      threads = 0;
+    };
+    clang = {
+      excludeArgs = { "-frounding-math"} ;
+    };
+  }
+}
+```
+]],
+    default_config = {
+      root_dir = [[root_pattern("compile_commands.json", ".ccls", "compile_flags.txt", ".git") or dirname]],
+    },
+  },
+}
+
+require'lspconfig'.ccls.setup {
+    --init_options = { .... etc
+    cmd = { 'ccls' },
+    -- add h?
+    filetypes = { 'c', 'cpp', 'objc', 'objcpp' },
+    root_dir = function(fname)
+      return util.root_pattern('compile_commands.json', '.ccls', 'compile_flags.txt', '.git')(fname)
+        or util.path.dirname(fname)
+    end,
+    on_attach = on_attach,
+    flags = {
+      debounce_text_changes = 150,
+    }
+}
 ------------------------------ tab between windows, etc
+
 vim.cmd [[
 nnoremap <C-i> <C-w><C-w>
 nnoremap <C-h> <C-w>h
@@ -121,11 +185,11 @@ vim.opt.tabstop = 2
 vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
 
+----------------------------------- 'modular' lua setup:
 -- /usr/share/lua/5.1/slug.lua
 require('slug')
 -- /usr/share/lua/5.1/caller.lua
 -- call with :lua caller.foo()
--- 'modular' lua setup:
 require('caller')
 -- cool statusline with modificiation [+]
 require('hardline').setup {
