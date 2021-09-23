@@ -174,6 +174,7 @@ nnoremap <C-k> <C-w>k
 nnoremap _ <C-w>_
 command Q q
 command W w
+command L :lua vim.lsp.buf.workspace_symbol()<CR>
 ]]
 --https://vonheikemen.github.io/devlog/tools/configuring-neovim-using-lua/
 -- look again : keybindings
