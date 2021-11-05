@@ -1,0 +1,8 @@
+# Helix CONFIG xileH #
+
+title = "hx config"
+
+[editor]
+idle-timeout = 0
+line-number = "absolute"
+completion-triggen-len = 1
